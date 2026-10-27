@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python-listák – 20 interaktív feladat</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: Arial, sans-serif;
+  background: #eef3fa;
+  color: #202c40;
+  margin: 0;
+  padding: 15px;
+}
+main {
+  max-width: 850px;
+  margin: 25px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px #0002;
+}
+h1 { color: #2458a5; }
+.subtitle { color: #63728a; }
+.progress {
+  height: 13px;
+  background: #dce5f2;
+  border-radius: 10px;
+  overflow: hidden;
+}
+#bar {
+  height: 100%;
+  width: 0;
+  background: #3984e6;
+  transition: width .3s;
+}
+pre {
+  white-space: pre-wrap;
+  background: #17263d;
+  color: white;
+  padding: 18px;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 18px 0;
+}
+.cell {
+  min-width: 65px;
+  text-align: center;
+  background: #edf5ff;
+  border: 2px solid #a7c4e9;
+  border-radius: 8px;
+  padding: 10px;
+}
+.cell small {
+  display: block;
+  color: #596b83;
+  margin-top: 6px;
+}
+.answers {
+  display: grid;
+  gap: 10px;
+}
+.answers button {
+  text-align: left;
+  background: white;
+  border: 2px solid #cbd6e6;
+  border-radius: 9px;
+  padding: 13px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.answers button:hover:not(:disabled) {
+  background: #e8f2ff;
+}
+.answers button:disabled { cursor: default; }
+.answers .wrong {
+  background: #ffe4e4;
+  border-color: #d94a4a;
+}
+.answers .correct {
+  background: #d9f7e4;
+  border-color: #239451;
+}
+#feedback {
+  display: none;
+  margin-top: 18px;
+  padding: 16px;
+  background: #eef4ff;
+  border-radius: 10px;
+  line-height: 1.6;
+}
+.action {
+  display: none;
+  margin-top: 18px;
+  padding: 13px 22px;
+  background: #2865bd;
+  color: white;
+  border: 0;
+  border-radius: 9px;
+  font-size: 16px;
+  cursor: pointer;
+}
+#end { display: none; }
+</style>
+</head>
+<body>
+<main>
+<h1>🐍 Python-listák – 20 kihívás</h1>
+<p class="subtitle">
+Indexelés • Szeletelés • Bejárás • Hibakeresés
+</p>
+
+<div class="progress"><div id="bar"></div></div>
+<p id="progressText"></p>
+
+<section id="quiz">
+  <h2 id="question"></h2>
+  <pre id="code"></pre>
+  <div class="cells" id="cells"></div>
+  <div class="answers" id="answers"></div>
+  <div id="feedback" aria-live="polite"></div>
+  <button class="action" id="next" onclick="nextQuestion()">
+    Következő feladat →
+  </button>
+</section>
+
+<section id="end">
+  <h2>🎉 Gratulálok! Végigértél!</h2>
+  <p id="result"></p>
+  <button class="action" style="display:inline-block"
+          onclick="restart()">Újrakezdés</button>
+</section>
+</main>
+
+<script>
+const questions = [
+{
+q:"Melyik elem található a 0. indexen?",
+code:'szinek = ["piros", "kék", "zöld", "sárga"]\nszinek[0]',
+a:['"piros"','"kék"','"zöld"','"sárga"','Hiba'],
+ok:0,
+hint:"A Pythonban az első elem indexe nem 1.",
+hint2:"Az indexelés 0-tól kezdődik.",
+ex:"A 0. index a lista első elemét jelöli.",
+v:["piros","kék","zöld","sárga"]
+},
+{
+q:"Mit ad vissza a kifejezés?",
+code:"x = [8, 3, 12, 5, 9]\nx[3]",
+a:["8","3","12","5","9"],
+ok:3,
+hint:"Ne a harmadik elemet keresd!",
+hint2:"Számolj nullától: 0, 1, 2, 3.",
+ex:"A 3. indexen az 5 található.",
+v:[8,3,12,5,9]
+},
+{
+q:"Melyik indexen található a körte?",
+code:'x = ["alma", "banán", "szilva", "körte", "barack"]',
+a:["0","1","2","3","4"],
+ok:3,
+hint:"A körte a negyedik elem.",
+hint2:"A negyedik elem indexe 3.",
+ex:"Az index mindig eggyel kisebb az elem sorszámánál.",
+v:["alma","banán","szilva","körte","barack"]
+},
+{
+q:"Mit jelent az x[-1]?",
+code:'x = ["a", "b", "c", "d"]\nx[-1]',
+a:['"a"','"b"','"c"','"d"',"Hiba"],
+ok:3,
+hint:"A negatív indexek hátulról számolnak.",
+hint2:"A -1 az utolsó elemet jelöli.",
+ex:"Az x[-1] mindig az utolsó elemet adja.",
+v:["a","b","c","d"]
+},
+{
+q:"Mit ad vissza az x[-3]?",
+code:'x = ["a", "b", "c", "d", "e"]\nx[-3]',
+a:['"a"','"b"','"c"','"d"','"e"'],
+ok:2,
+hint:"Indulj a lista végétől!",
+hint2:"-1: e, -2: d, -3: c.",
+ex:"A -3 indexen a c található.",
+v:["a","b","c","d","e"]
+},
+{
+q:"Mi az x[1:4] eredménye?",
+code:"x = [10, 20, 30, 40, 50]\nx[1:4]",
+a:[
+"[10, 20, 30, 40]",
+"[20, 30, 40]",
+"[20, 30, 40, 50]",
+"[10, 20, 30]",
+"[30, 40, 50]"
+],
+ok:1,
+hint:"A kezdőindex benne van a szeletben.",
+hint2:"A záróindex már nincs benne!",
+ex:"Az 1., 2. és 3. indexű elemeket kapjuk.",
+v:[10,20,30,40,50]
+},
+{
+q:"Mi lesz az x[:3] eredménye?",
+code:"x = [10, 20, 30, 40, 50]\nx[:3]",
+a:[
+"[40, 50]",
+"[10, 20]",
+"[10, 20, 30]",
+"[10, 20, 30, 40]",
+"[20, 30, 40]"
+],
+ok:2,
+hint:"Ha nincs kezdőindex, a lista elejéről indulunk.",
+hint2:"A 3. indexű elem már nem kerül bele.",
+ex:"A 0., 1. és 2. indexű elemeket kapjuk.",
+v:[10,20,30,40,50]
+},
+{
+q:"Mit ad vissza az x[2:]?",
+code:"x = [10, 20, 30, 40, 50]\nx[2:]",
+a:[
+"[10, 20]",
+"[20, 30, 40]",
+"[30, 40]",
+"[30, 40, 50]",
+"[20, 30, 40, 50]"
+],
+ok:3,
+hint:"A 2. indexű elemtől indulunk.",
+hint2:"Ha nincs záróindex, a lista végéig haladunk.",
+ex:"A 30-tól kezdve minden elemet megkapunk.",
+v:[10,20,30,40,50]
+},
+{
+q:"Melyik szelet eredménye ['b', 'c', 'd']?",
+code:'x = ["a", "b", "c", "d", "e", "f"]',
+a:["x[1:3]","x[1:4]","x[2:5]","x[0:4]","x[1:5]"],
+ok:1,
+hint:"A b indexe 1.",
+hint2:"A d indexe 3, de a záróindexnek 4-nek kell lennie.",
+ex:"Az x[1:4] a b, c és d elemeket adja.",
+v:["a","b","c","d","e","f"]
+},
+{
+q:"Hogyan kapjuk meg az utolsó két elemet?",
+code:"x = [4, 7, 9, 2, 6]",
+a:["x[-2:]","x[:-2]","x[-2:-1]","x[2:]","x[:2]"],
+ok:0,
+hint:"Használj negatív indexet!",
+hint2:"A -2 az utolsó előtti elem.",
+ex:"Az x[-2:] eredménye [2, 6].",
+v:[4,7,9,2,6]
+},
+{
+q:"Melyik szelet eredménye üres lista?",
+code:"x = [1, 2, 3, 4, 5]",
+a:["x[1:3]","x[:0]","x[0:2]","x[-2:]","x[::2]"],
+ok:1,
+hint:"Keress olyan szeletet, amely egyetlen elemet sem tartalmaz!",
+hint2:"A [:0] a 0. index előtt megáll.",
+ex:"Az x[:0] eredménye [].",
+v:[1,2,3,4,5]
+},
+{
+q:"Mit ad vissza az x[1:7:2]?",
+code:"x = [0, 1, 2, 3, 4, 5, 6]\nx[1:7:2]",
+a:[
+"[1, 2, 3, 4, 5, 6]",
+"[1, 3, 5]",
+"[2, 4, 6]",
+"[1, 2, 3]",
+"[3, 5]"
+],
+ok:1,
+hint:"A harmadik szám a lépésköz.",
+hint2:"Az 1. indexről indulva kettesével haladunk.",
+ex:"Az 1., 3. és 5. indexű elemeket kapjuk.",
+v:[0,1,2,3,4,5,6]
+},
+{
+q:"Melyik kifejezés fordítja meg a listát?",
+code:"x = [1, 2, 3, 4]",
+a:["x[1:]","x[:-1]","x[::-1]","x[::1]","x[-1:]"],
+ok:2,
+hint:"A harmadik szeletparaméter szabályozza az irányt.",
+hint2:"A -1 lépésköz visszafelé halad.",
+ex:"Az x[::-1] eredménye [4, 3, 2, 1].",
+v:[1,2,3,4]
+},
+{
+q:"Mit ír ki a ciklus?",
+code:"x = [3, 5, 7]\nfor elem in x:\n    print(elem)",
+a:[
+"0, 1, 2 külön sorban",
+"3, 5, 7 külön sorban",
+"[3, 5, 7] egyszer",
+"Csak 7",
+"Hiba"
+],
+ok:1,
+hint:"Az elem változó a lista értékeit veszi fel.",
+hint2:"A ciklus háromszor fut le.",
+ex:"Az elem sorban 3, 5 és 7 lesz.",
+v:[3,5,7]
+},
+{
+q:"Mennyi lesz az összeg?",
+code:"x = [2, 4, 6]\nosszeg = 0\nfor elem in x:\n    osszeg += elem\nprint(osszeg)",
+a:["3","6","10","12","24"],
+ok:3,
+hint:"Minden cikluslépésben hozzáadunk egy elemet.",
+hint2:"0 + 2 + 4 + 6 = ?",
+ex:"Az összeg 12.",
+v:[2,4,6]
+},
+{
+q:"Mit ír ki a program?",
+code:'x = ["a", "b", "c"]\nfor i in range(len(x)):\n    print(i)',
+a:[
+"a, b, c",
+"1, 2, 3",
+"0, 1, 2",
+"0, 1, 2, 3",
+"Hiba"
+],
+ok:2,
+hint:"A len(x) értéke 3.",
+hint2:"A range(3) a 0, 1, 2 számokat adja.",
+ex:"Az i változó az indexeket veszi fel.",
+v:["a","b","c"]
+},
+{
+q:"Hol van a hiba?",
+code:"x = [10, 20, 30]\nfor i in range(1, len(x) + 1):\n    print(x[i])",
+a:[
+"A print nem lehet ciklusban",
+"A lista 1-től indexelődik",
+"Az x[3] nem létezik",
+"A len(x) mindig 0",
+"A range nem használható listához"
+],
+ok:2,
+hint:"A listában három elem van.",
+hint2:"Az érvényes indexek: 0, 1, 2.",
+ex:"A ciklus az x[3] elemet is megpróbálja elérni. Helyesen: range(len(x)).",
+v:[10,20,30]
+},
+{
+q:"Miért hibás a program?",
+code:"x = [4, 8, 12]\nfor elem in x:\n    print(x[elem])",
+a:[
+"A for nem járhat be számokat",
+"Az elem érték, nem index",
+"A print tiltott",
+"A lista üres",
+"A lista nem tartalmaz számokat"
+],
+ok:1,
+hint:"Mit vesz fel az elem változó?",
+hint2:"Az elem először 4 lesz, de nincs x[4].",
+ex:"A for elem in x az értékeken halad végig. Helyesen: print(elem).",
+v:[4,8,12]
+},
+{
+q:"Melyik ciklus írja ki a páros indexű elemeket?",
+code:"x = [10, 20, 30, 40, 50]",
+a:[
+"for i in range(1, len(x), 2): print(x[i])",
+"for i in range(0, len(x), 2): print(x[i])",
+"for elem in x: print(x[2])",
+"for i in range(2): print(x[i])",
+"for i in range(len(x)): print(i)"
+],
+ok:1,
+hint:"A páros indexek: 0, 2, 4.",
+hint2:"A range harmadik paramétere legyen 2.",
+ex:"A helyes ciklus a 10, 30 és 50 értékeket írja ki.",
+v:[10,20,30,40,50]
+},
+{
+q:"Mit ír ki az összetett program?",
+code:"x = [2, 4, 6, 8, 10, 12]\ny = x[1:5:2]\nfor elem in y:\n    print(elem * 2)",
+a:[
+"4 és 8",
+"8 és 16",
+"8 és 20",
+"4, 8, 12, 16",
+"Hiba"
+],
+ok:1,
+hint:"Először számold ki az y listát!",
+hint2:"Az y = [4, 8]. Ezután mindkét elemet megduplázzuk.",
+ex:"A szelet [4, 8], így a program 8-at és 16-ot ír ki.",
+v:[2,4,6,8,10,12]
+}
+];
+
+let current = 0;
+let attempts = 0;
+let firstTry = 0;
+let helped = 0;
+let revealed = 0;
+let finished = false;
+
+function el(id) {
+  return document.getElementById(id);
+}
+
+function showQuestion() {
+  const q = questions[current];
+  attempts = 0;
+  finished = false;
+
+  el("progressText").textContent =
+    (current + 1) + ". feladat / " + questions.length;
+
+  el("bar").style.width =
+    (current / questions.length * 100) + "%";
+
+  el("question").textContent = q.q;
+  el("code").textContent = q.code;
+  el("feedback").style.display = "none";
+  el("next").style.display = "none";
+
+  el("cells").innerHTML = "";
+  q.v.forEach((value, index) => {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    const label = document.createElement("div");
+    label.textContent = value;
+
+    const small = document.createElement("small");
+    small.textContent = "index: " + index;
+
+    cell.appendChild(label);
+    cell.appendChild(small);
+    el("cells").appendChild(cell);
+  });
+
+  el("answers").innerHTML = "";
+
+  q.a.forEach((answer, index) => {
+    const button = document.createElement("button");
+    button.textContent =
+      String.fromCharCode(65 + index) + ") " + answer;
+    button.onclick = () => checkAnswer(index, button);
+    el("answers").appendChild(button);
+  });
+}
+
+function checkAnswer(index, button) {
+  if (finished) return;
+
+  const q = questions[current];
+  const feedback = el("feedback");
+  feedback.style.display = "block";
+
+  if (index === q.ok) {
+    finished = true;
+
+    if (attempts === 0) firstTry++;
+    else helped++;
+
+    button.classList.add("correct");
+
+    feedback.innerHTML =
+      "<strong>✅ Helyes válasz!</strong><br>" + q.ex;
+
+    finishQuestion();
+    return;
+  }
+
+  attempts++;
+  button.classList.add("wrong");
+  button.disabled = true;
+
+  if (attempts === 1) {
+    feedback.innerHTML =
+      "<strong>❌ Nem egészen!</strong><br>" +
+      q.hint +
+      "<br><b>Próbálkozz újra!</b>";
+  }
+  else if (attempts === 2) {
+    feedback.innerHTML =
+      "<strong>💡 Segítség:</strong><br>" +
+      q.hint2 +
+      "<br><b>Még egyszer próbálkozhatsz!</b>";
+  }
+  else {
+    finished = true;
+    revealed++;
+
+    const buttons = el("answers").children;
+    buttons[q.ok].classList.add("correct");
+
+    feedback.innerHTML =
+      "<strong>📖 A helyes válasz:</strong><br>" +
+      q.a[q.ok] +
+      "<br><br>" + q.ex;
+
+    finishQuestion();
+  }
+}
+
+function finishQuestion() {
+  const buttons = el("answers").children;
+
+  for (const button of buttons) {
+    button.disabled = true;
+  }
+
+  el("next").style.display = "inline-block";
+
+  if (current === questions.length - 1) {
+    el("next").textContent = "Eredmény megtekintése →";
+  } else {
+    el("next").textContent = "Következő feladat →";
+  }
+}
+
+function nextQuestion() {
+  current++;
+
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  el("quiz").style.display = "none";
+  el("end").style.display = "block";
+  el("bar").style.width = "100%";
+  el("progressText").textContent = "Mind a 20 feladat kész!";
+
+  el("result").innerHTML =
+    "✅ Elsőre helyes: <b>" + firstTry + "</b><br>" +
+    "💡 Segítséggel megoldott: <b>" + helped + "</b><br>" +
+    "📖 Megoldás megmutatva: <b>" + revealed + "</b><br><br>" +
+    "Elsőre helyes válaszok aránya: <b>" +
+    Math.round(firstTry / questions.length * 100) + "%</b>";
+}
+
+function restart() {
+  current = 0;
+  attempts = 0;
+  firstTry = 0;
+  helped = 0;
+  revealed = 0;
+  finished = false;
+
+  el("quiz").style.display = "block";
+  el("end").style.display = "none";
+
+  showQuestion();
+}
+
+showQuestion();
+</script>
+</body>
+</html>
